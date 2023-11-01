@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql" // Change this to your database provider (e.g., mysql)
+  url      = env("DATABASE_URL") // Your database connection URL
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  email    String   @unique
+  password String   // You should hash and salt passwords
+  name     String
+  orders   Order[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  image       String
+  stock       Int
+  orders   Order[]
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  products  Product[]
+}
