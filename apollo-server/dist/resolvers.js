@@ -68,6 +68,31 @@ export const resolvers = {
             });
             return deletedProduct;
         },
+        deleteCartProduct: async (_, { userId, productId }, context) => {
+            try {
+                const cart = await prisma.cart.findUnique({
+                    where: { userId },
+                    include: { products: true },
+                });
+                if (!cart) {
+                    throw new Error('Cart not found');
+                }
+                const updatedCart = await prisma.cart.update({
+                    where: { id: cart.id },
+                    data: {
+                        products: {
+                            disconnect: { id: productId },
+                        },
+                    },
+                    include: { products: true },
+                });
+                return updatedCart;
+            }
+            catch (error) {
+                console.error('Error deleting product from cart:', error);
+                throw new Error('Failed to delete product from cart');
+            }
+        },
     },
     User: {
         cart: async (parent, _, context) => prisma.cart.findUnique({ where: { userId: parent.id } }),

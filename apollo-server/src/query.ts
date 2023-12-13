@@ -15,6 +15,7 @@ export const typeDefs = `
     deleteProduct(id: Int!): Product
     createCart(userId: Int!): Cart
     addToCart(cartId: Int!, productId: Int!): Cart
+    deleteCartProduct(userId: Int!, productId: Int!): Cart
   }
 
   type User {

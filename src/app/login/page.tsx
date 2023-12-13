@@ -3,6 +3,9 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client'; 
 import { useRouter } from 'next/navigation';
+import { isLoggedIn } from '@/store/recoilState';
+import { useSetRecoilState } from 'recoil';
+
 
 const LOGIN_CHECK_QUERY = gql`
   query LoginQuery($loginUsername: String!, $loginPassword: String!) {
@@ -49,7 +52,8 @@ export default function Login() {
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [createCart] = useMutation(CREATE_CART);
-  
+  const setIsLoggedIn = useSetRecoilState(isLoggedIn);
+
   const { data, loading, error } = useQuery(LOGIN_CHECK_QUERY, {
     variables: { loginUsername, loginPassword },
     skip: !loginUsername || !loginPassword,
@@ -66,6 +70,7 @@ export default function Login() {
       console.log('Login successful:', data.login);
       localStorage.setItem("token", data.login.token);
       localStorage.setItem("userId", data.login.user.id);
+      window.dispatchEvent(new Event('userLoggedIn'));
       try {
         // Check if the user already has a cart
         const existingCart = cartData?.getCart;

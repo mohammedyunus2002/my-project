@@ -1,5 +1,4 @@
 "use client"
-import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import logo from "./Images/logo-no-background.png"
@@ -13,9 +12,9 @@ import sofa from "./Images/sofa.png"
 import mail from "./Images/mail.png"
 import { useRouter } from 'next/navigation';
 import logout from "./Images/logout.png";
-import { useEffect, useState } from 'react'
 import { FaTelegramPlane } from "react-icons/fa";
 import { RecoilRoot } from 'recoil';
+import { useEffect, useState } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -25,31 +24,50 @@ export default function RootLayout({
   children: React.ReactNode
 }) {  
   const router = useRouter();
-  const pathname = usePathname()
-  
+  const pathname = usePathname();
 
-  const isLoggedIn = () => {
-    if (typeof window !== 'undefined') {
-      const isToken = localStorage.getItem("token");
-      return isToken !== null;
-    }
-    return false;
-  };
+  const [userLoggedIn, setUserLoggedIn] = useState(false);
 
-  
+  const checkLoggedIn = () => {
+    const loggedIn = !!localStorage.getItem('token');
+    setUserLoggedIn(loggedIn);
+  }
+
+  useEffect(() => {
+
+    checkLoggedIn();
+
+    const intervalId = setInterval(() => {
+      checkLoggedIn();
+    }, 1); 
+
+    window.addEventListener('storage', checkLoggedIn);
+    window.addEventListener('userLoggedOut', checkLoggedIn);
+
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('storage', checkLoggedIn);
+      window.removeEventListener('userLoggedOut', checkLoggedIn);    
+    };
+  }, []);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
+      localStorage.removeItem("cartId");
+      window.dispatchEvent(new Event('userLoggedOut'));
     }
     router.refresh();
   };
 
   const handleLogin = () => {
-    router.push('/login');
+    if (typeof window !== 'undefined') {
+      router.push('/login');
+    }
   };
-  
+
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -128,7 +146,7 @@ export default function RootLayout({
                   )}
                 </p>
               </Link>
-              {isLoggedIn() ? (
+              {userLoggedIn ? (
                 // If logged in, show the logout button
                 <button onClick={handleLogout} className='ml-20 cursor-pointer'>
                   <Image
@@ -202,10 +220,11 @@ export default function RootLayout({
                     <div>
                         <button 
                         className='w-20 h-50 flex items-center justify-center bg-green-900 rounded-md'
+                        onClick={() => {alert("Thank you for subscribing")}}
                         >
                           <FaTelegramPlane size={40} color="white" />
                         </button>
-                        </div>
+                    </div>
                 </div>
               </div>
             </div>

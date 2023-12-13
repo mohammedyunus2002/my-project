@@ -6,7 +6,17 @@ import { useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa';
 
-
+const Get_Products = gql`
+query Query {
+  getAllProducts {
+    id
+    image
+    name
+    price
+    type
+  }
+}
+`;
 
 export default function shop() {
     if (__DEV__) {  // Adds messages only in a dev environment
@@ -16,7 +26,8 @@ export default function shop() {
 
       const [selectedCategory, setSelectedCategory] = useState<string>('sofas');
       const [searchTerm, setSearchTerm] = useState<string>('');
-    
+      
+      
     return (
         <div>
             <div className='bg-white p-11'>
@@ -32,23 +43,7 @@ export default function shop() {
                         />
                         <FaSearch className='ml-2 cursor-pointer text-gray-500' />
                     </div>
-                    <div className='absolute top-28 left-32 text-black border border-gray-500'>
-                    <select 
-                    name="furniture" 
-                    id="furniture"
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    >
-                        <option value="sofas">Sofas</option>
-                        <option value="beds">Beds</option>
-                        <option value="dining">Dining</option>
-                        <option value="wardrobde">Wardrobe</option>
-                        <option value="recliners">Recliners</option>
-                        <option value="coffe_table">Coffe table</option>
-                        <option value="bookshelv">Bookshelv</option>
-                        <option value="seating">Seating</option>
-                        <option value="light_bulb">Light bulb</option>
-                    </select>
-                    </div>
+                    
                 </div>
                 <div className='mt-28'>
                 <DisplayProducts selectedCategory={selectedCategory} searchTerm={searchTerm} />
@@ -66,17 +61,7 @@ interface Product {
     type: string;
   }
 
-  const Get_Products = gql`
-      query Query {
-        getAllProducts {
-          id
-          image
-          name
-          price
-          type
-        }
-      }
-    `;
+
 
   const Add_To_Cart = gql `
     mutation Mutation($cartId: Int!, $productId: Int!) {
@@ -135,27 +120,42 @@ interface Product {
         return product.type.toLowerCase() === selectedCategory.toLowerCase();
       }
     });
+
+    const groupedProducts: { [key: string]: Product[] } = {};
+
+    data?.getAllProducts.forEach((product) => {
+      if(!groupedProducts[product.type]) {
+        groupedProducts[product.type] = [];
+      }
+      groupedProducts[product.type].push(product);
+    })
   
     return (
-      <div className='mt-8 flex flex-wrap '>
-        {filteredProducts?.map(({ id, name, price, image, type }: Product) => (
-          <div key={id} className='flex flex-col items-center justify-center text-black relative group mx-4 my-4'>
-            <img
-              className='w-64 h-64 object-cover transition-transform transform group-hover:scale-105'
-              alt="product-reference"
-              src={image} // Update here
-            />
-            <h3 className='text-xl mt-2'>{name}</h3>
-            <p className='mt-1'>{type}</p>
-            <p className='mt-1'>₹{price}</p>
-            <button 
-            className="absolute bottom-0 right-10 mr-10 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-700"
-            onClick={() => handleAddToCart(parsedCartId, id)}
-            >
-              <FaPlus />
-            </button>
-          </div>
-        ))}
+      <div>
+        <h2 className="text-3xl font-bold mb-4 text-black">{selectedCategory}</h2>
+        <div className='mt-8 flex flex-wrap '>
+          {groupedProducts[selectedCategory]?.map(({ id, name, price, image, type }: Product) => (
+            <div >
+              <div key={id} className='flex flex-col items-center justify-center text-black relative group mx-4 my-4'>
+                  <img
+                  className='w-64 h-64 object-cover rounded-md shadow-md transition-transform transform group-hover:scale-105'
+                  alt="product-reference"
+                  src={image} // Update here
+                />
+                <h3 className='text-xl mt-2 font-medium text-gray-800 hover:text-blue-500 transition-colors'>{name}</h3>
+                <p className='mt-1 text-lg font-bold text-gray-600'> ₹{price}</p>
+                <div className='flex items-center mt-2'>
+                  <button 
+                  className='bg-blue-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-700'
+                  onClick={() => handleAddToCart(parsedCartId, id)}
+                  >
+                    <FaPlus />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
